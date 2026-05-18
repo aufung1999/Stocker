@@ -8,6 +8,7 @@ import { MarketStats } from './components/MarketStats';
 import { AIPrediction } from './components/AIPrediction';
 import { NewsSection } from './components/NewsSection';
 import { INITIAL_STOCKS } from './services/mockData';
+import { fetchStocks } from './services/api';
 import type { Stock } from './types';
 import { cn } from './lib/utils';
 import { 
@@ -30,6 +31,27 @@ export default function App() {
   const [selectedStock, setSelectedStock] = useState<Stock>(INITIAL_STOCKS[0]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [timeRange, setTimeRange] = useState('1D');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchStocks()
+      .then((apiStocks) => {
+        if (!isMounted || apiStocks.length === 0) {
+          return;
+        }
+
+        setStocks(apiStocks);
+        setSelectedStock(apiStocks[0]);
+      })
+      .catch(() => {
+        // Keep the local mock data available when the API server is not running.
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // --- Real-time Price Simulation ---
   useEffect(() => {
